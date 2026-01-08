@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rayane's Playground</title>
+<style>
+body { 
+    font-family: 'Segoe UI', sans-serif; 
+    text-align:center; 
+    background: linear-gradient(135deg, #1e1e2f, #3b3b5f, #6b5b95); 
+    min-height:100vh; 
+    display:flex; 
+    flex-direction:column; 
+    justify-content:center; 
+    align-items:center; 
+    transition: background 0.5s;
+}
+
+h1 { 
+    font-size:3rem; 
+    color:#f5f5f5; 
+    margin-bottom:20px; 
+    text-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+}
+
+.cards { 
+    display:flex; 
+    gap:20px; 
+    flex-wrap:wrap; 
+    justify-content:center; 
+    margin-top:40px; 
+}
+
+.card { 
+    background: rgba(255,255,255,0.1); 
+    padding:30px; 
+    border-radius:15px; 
+    width:200px; 
+    cursor:pointer; 
+    transition:0.3s; 
+    color:#fff; 
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    font-weight: 600;
+}
+
+.card:hover { 
+    transform:scale(1.05); 
+    background: rgba(255,255,255,0.25); 
+    color:#1e1e2f; 
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+</style>
+</head>
+<body>
+<div style="position:fixed; top:20px; left:20px; display:flex; flex-direction:column; gap:10px; z-index:1000;">
+    <button onclick="window.location.href='index.html'" style="padding:10px 15px; border:none; border-radius:5px; cursor:pointer; background:#ffd700; color:#1e1e2f; font-weight:bold;">🏠 Home</button>
+
+
+    <button onclick="window.location.href='projects.html'" style="padding:10px 15px; border:none; border-radius:5px; cursor:pointer; background:#ffd700; color:#1e1e2f; font-weight:bold;">Projects</button>
+
+    <button onclick="window.location.href='about.html'" style="padding:10px 15px; border:none; border-radius:5px; cursor:pointer; background:#ffd700; color:#1e1e2f; font-weight:bold;">About</button>
+</div>
+
+<h1>Welcome to My Playground 🎉</h1>
+<div class="cards">
+    <div class="card" onclick="window.location.href='ml.html'">Machine Learning</div>
+    <div class="card" onclick="window.location.href='dataviz.html'">Data Visualization</div>
+    <div class="card" onclick="window.location.href='fun.html'">Fun Experiments</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Fun Experiments</title>
+<style>
+body { font-family: 'Segoe UI', sans-serif; background:#222; color:#fff; text-align:center; }
+button { font-size:16px; padding:8px 16px; margin:10px; border-radius:5px; cursor:pointer; }
+#gameContainer { margin-top:20px; }
+canvas { border: 1px solid #fff; margin:10px; }
+#container { display:flex; justify-content:center; flex-wrap:wrap; }
+.hidden { display:none; }
+</style>
+</head>
+<body>
+<div style="position:fixed; top:20px; left:20px; display:flex; flex-direction:column; gap:10px; z-index:1000;">
+    <button onclick="window.location.href='index.html'" style="padding:10px 15px; border:none; border-radius:5px; cursor:pointer; background:#ffd700; color:#1e1e2f; font-weight:bold;">🏠 Home</button>
+
+    <button onclick="window.location.href='playground.html'" style="padding:10px 15px; border:none; border-radius:5px; cursor:pointer; background:#ffd700; color:#1e1e2f; font-weight:bold;">Playground</button>
+
+    <button onclick="window.location.href='projects.html'" style="padding:10px 15px; border:none; border-radius:5px; cursor:pointer; background:#ffd700; color:#1e1e2f; font-weight:bold;">Projects</button>
+
+    <button onclick="window.location.href='about.html'" style="padding:10px 15px; border:none; border-radius:5px; cursor:pointer; background:#ffd700; color:#1e1e2f; font-weight:bold;">About</button>
+</div>
+
+    <h1>Fun Experiments</h1>
+<div>
+    <button id="featureFunBtn">Feature Fun</button>
+    <button id="emptyGameBtn">Empty Game</button>
+</div>
+
+<div id="gameContainer">
+    <!-- Feature Fun Game -->
+    <div id="featureFun">
+        <p>Choose a feature extractor:</p>
+        <select id="extractorSelect">
+            <option value="">--Select Extractor--</option>
+            <option value="quantum">Quantum-Inspired Features</option>
+            <option value="sobel">Sobel + Gradient</option>
+            <option value="hog">Full HOG Visualization</option>
+        </select>
+        <div id="container">
+            <canvas id="videoCanvas" width="320" height="240"></canvas>
+            <canvas id="featureCanvas" width="320" height="240"></canvas>
+        </div>
+    </div>
+
+    <!-- Empty Game Placeholder -->
+    <div id="emptyGame" class="hidden">
+        <h2>Coming Soon!</h2>
+        <p>This game will be added later.</p>
+    </div>
+</div>
+
+<script>
+// ------------------- Tab Switching -------------------
+const featureFunBtn = document.getElementById('featureFunBtn');
+const emptyGameBtn = document.getElementById('emptyGameBtn');
+const featureFunDiv = document.getElementById('featureFun');
+const emptyGameDiv = document.getElementById('emptyGame');
+
+featureFunBtn.addEventListener('click', () => {
+    featureFunDiv.classList.remove('hidden');
+    emptyGameDiv.classList.add('hidden');
+});
+
+emptyGameBtn.addEventListener('click', () => {
+    featureFunDiv.classList.add('hidden');
+    emptyGameDiv.classList.remove('hidden');
+});
+
+// ------------------- Feature Fun Game -------------------
+const videoCanvas = document.getElementById('videoCanvas');
+const videoCtx = videoCanvas.getContext('2d');
+
+const featureCanvas = document.getElementById('featureCanvas');
+const featureCtx = featureCanvas.getContext('2d');
+
+const extractorSelect = document.getElementById('extractorSelect');
+let extractor = null;
+
+// Start webcam
+navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+    const videoStream = document.createElement('video');
+    videoStream.srcObject = stream;
+    videoStream.play();
+    requestAnimationFrame(() => draw(videoStream));
+}).catch(err => { alert("Camera access denied!"); });
+
+// Quantum Features
+function quantumFeatures(imageData, patchSize=2){
+    const data = imageData.data;
+    const w = imageData.width;
+    const h = imageData.height;
+    const features = [];
+    for(let y=0;y<h;y+=patchSize){
+        for(let x=0;x<w;x+=patchSize){
+            let patch = [];
+            for(let py=0;py<patchSize;py++){
+                for(let px=0;px<patchSize;px++){
+                    let idx = 4*((y+py)*w + (x+px));
+                    if(idx<data.length) patch.push(data[idx]/255);
+                }
+            }
+            if(patch.length<4) continue;
+            let patchFeat = [];
+            for(let i=0;i<4;i++){
+                let theta = Math.PI*patch[i];
+                patchFeat.push(Math.cos(theta)*Math.sin(patch.reduce((a,b)=>a+b,0)));
+            }
+            features.push(patchFeat);
+        }
+    }
+    return features;
+}
+
+// Sobel gradients
+function sobelGradient(imageData){
+    const w=imageData.width,h=imageData.height,data=imageData.data;
+    function gray(x,y){ const i=4*(y*w+x); return 0.299*data[i]+0.587*data[i+1]+0.114*data[i+2]; }
+    const grad=[];
+    for(let y=1;y<h-1;y++){
+        for(let x=1;x<w-1;x++){
+            let gx = gray(x+1,y)-gray(x-1,y);
+            let gy = gray(x,y+1)-gray(x,y-1);
+            grad.push({x:x,y:y,mag:Math.sqrt(gx*gx+gy*gy)});
+        }
+    }
+    return grad;
+}
+
+// Full HOG visualization
+function computeHOG(imageData){
+    const w=imageData.width,h=imageData.height,data=imageData.data;
+    function gray(x,y){ const i=4*(y*w+x); return 0.299*data[i]+0.587*data[i+1]+0.114*data[i+2]; }
+    const gradX = [], gradY = [];
+    for(let y=0;y<h;y++){
+        for(let x=0;x<w;x++){
+            const gx = (x>0 && x<w-1)?gray(x+1,y)-gray(x-1,y):0;
+            const gy = (y>0 && y<h-1)?gray(x,y+1)-gray(x,y-1):0;
+            gradX.push(gx); gradY.push(gy);
+        }
+    }
+    const magnitude = [];
+    for(let i=0;i<gradX.length;i++){
+        magnitude.push(Math.sqrt(gradX[i]*gradX[i]+gradY[i]*gradY[i]));
+    }
+    const imgData = featureCtx.createImageData(w,h);
+    for(let i=0;i<w*h;i++){
+        let val = Math.min(255, Math.floor(magnitude[i]*4));
+        imgData.data[4*i]=val;
+        imgData.data[4*i+1]=val;
+        imgData.data[4*i+2]=val;
+        imgData.data[4*i+3]=255;
+    }
+    return imgData;
+}
+
+// Draw loop
+async function draw(videoStream){
+    if(featureFunDiv.classList.contains('hidden')) return requestAnimationFrame(()=>draw(videoStream));
+
+    if(videoStream.readyState>=2){
+        videoCtx.drawImage(videoStream,0,0,videoCanvas.width,videoCanvas.height);
+        const frame = videoCtx.getImageData(0,0,videoCanvas.width,videoCanvas.height);
+        featureCtx.clearRect(0,0,featureCanvas.width,featureCanvas.height);
+
+        if(extractor==="quantum"){
+            const feats = quantumFeatures(frame);
+            const cols = featureCanvas.width/4;
+            const imgData = featureCtx.createImageData(featureCanvas.width,featureCanvas.height);
+            feats.forEach((f,i)=>{
+                let px=(i%cols)*4;
+                let py=Math.floor(i/cols);
+                for(let j=0;j<4;j++){
+                    let idx = 4*(py*featureCanvas.width + px+j);
+                    if(idx<imgData.data.length) imgData.data[idx]=Math.floor((f[j]+1)/2*255);
+                    if(idx+1<imgData.data.length) imgData.data[idx+1]=Math.floor((f[j]+1)/2*255);
+                    if(idx+2<imgData.data.length) imgData.data[idx+2]=Math.floor((f[j]+1)/2*255);
+                    if(idx+3<imgData.data.length) imgData.data[idx+3]=255;
+                }
+            });
+            featureCtx.putImageData(imgData,0,0);
+        }
+        else if(extractor==="sobel"){
+            const grad = sobelGradient(frame);
+            grad.forEach(g=>{
+                const val = Math.min(255,Math.floor(g.mag*5));
+                featureCtx.fillStyle=`rgb(${val},${val},${val})`;
+                featureCtx.fillRect(g.x,g.y,1,1);
+            });
+        }
+        else if(extractor==="hog"){
+            const hogImg = computeHOG(frame);
+            featureCtx.putImageData(hogImg,0,0);
+        }
+    }
+    requestAnimationFrame(()=>draw(videoStream));
+}
+
+extractorSelect.addEventListener('change',(e)=>{
+    extractor = e.target.value;
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Machine Learning Playground</title>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body { font-family: 'Segoe UI', sans-serif; text-align:center; background:#282c34; color:#fff; padding:20px; }
+select, button { font-size:16px; padding:8px; margin-top:20px; border-radius:5px; cursor:pointer; }
+#output { margin-top:30px; background: rgba(255,255,255,0.1); padding:20px; border-radius:10px; text-align:left; max-width:800px; margin-left:auto; margin-right:auto; }
+h3 { color:#ffd700; }
+p { margin-top:10px; }
+table { border-collapse: collapse; width: 100%; margin-top: 15px; color: #fff; }
+th, td { border: 1px solid #fff; padding: 5px; text-align:center; }
+th { background-color: rgba(255,255,255,0.2); }
+canvas { background: rgba(255,255,255,0.1); margin-top:15px; border-radius:5px; }
+</style>
+</head>
+<body>
+<div style="position:fixed; top:20px; left:20px; display:flex; flex-direction:column; gap:10px; z-index:1000;">
+    <button onclick="window.location.href='index.html'" style="padding:10px 15px; border:none; border-radius:5px; cursor:pointer; background:#ffd700; color:#1e1e2f; font-weight:bold;">🏠 Home</button>
+
+    <button onclick="window.location.href='playground.html'" style="padding:10px 15px; border:none; border-radius:5px; cursor:pointer; background:#ffd700; color:#1e1e2f; font-weight:bold;">Playground</button>
+
+    <button onclick="window.location.href='projects.html'" style="padding:10px 15px; border:none; border-radius:5px; cursor:pointer; background:#ffd700; color:#1e1e2f; font-weight:bold;">Projects</button>
+
+    <button onclick="window.location.href='about.html'" style="padding:10px 15px; border:none; border-radius:5px; cursor:pointer; background:#ffd700; color:#1e1e2f; font-weight:bold;">About</button>
+</div>
+
+    
+<h1>Machine Learning Playground</h1>
+<p>Select an ML topic to see the mathematical reasoning:</p>
+
+<select id="mlSelect">
+    <option value="">--Choose ML Algorithm--</option>
+    <option value="linear">Linear Regression (with/without regularization)</option>
+    <option value="knn">K-Nearest Neighbors (KNN)</option>
+    <option value="kmeans">K-Means Clustering</option>
+    <option value="nn">Neural Networks</option>
+</select>
+
+<div id="output"></div>
+
+<script>
+const output = document.getElementById('output');
+
+document.getElementById('mlSelect').addEventListener('change', async (e) => {
+    const val = e.target.value;
+    output.innerHTML = '';
+    if(window.myChart) { window.myChart.destroy(); }
+
+    if(val==='linear'){
+        output.innerHTML = `
+        <h3>Linear Regression</h3>
+        <p><strong>Hypothesis (prediction function):</strong></p>
+        $$h_\\theta(x) = \\theta_0 + \\theta_1 x_1 + \\dots + \\theta_n x_n$$
+        <p>We predict output $y$ as a weighted combination of features. $\theta_0$ is the bias (intercept), $\theta_j$ are weights. Each input feature contributes linearly to the output.</p>
+
+        <p><strong>Cost Function (Mean Squared Error):</strong></p>
+        $$J(\\theta) = \\frac{1}{2m} \\sum_{i=1}^{m} \\big(h_\\theta(x^{(i)}) - y^{(i)}\\big)^2$$
+        <p>This measures the average squared difference between predicted and actual outputs. We divide by $2$ for convenience in derivative calculations.</p>
+
+        <p><strong>Gradient Descent (optimization):</strong></p>
+        $$\\theta_j := \\theta_j - \\alpha \\frac{\\partial J(\\theta)}{\\partial \\theta_j}$$
+        <p>We update each weight in the negative direction of the gradient to minimize $J(\\theta)$. $\alpha$ is the learning rate controlling step size.</p>
+
+        <p><strong>Regularization to avoid overfitting:</strong></p>
+        $$J(\\theta) = \\frac{1}{2m} \\sum_{i=1}^{m} (h_\\theta(x^{(i)}) - y^{(i)})^2 + \\lambda \\sum_{j=1}^{n} \\theta_j^2$$
+        <p>The additional penalty $\lambda \\sum \\theta_j^2$ (Ridge) discourages large weights, improving generalization.</p>
+
+        <p><strong>Interpretation:</strong> Linear regression finds a line (or hyperplane) that best fits the data by minimizing squared errors. Regularization controls model complexity.</p>
+
+        <button id="linearExample">Generate Example & Plot</button>
+        <div id="linearTable"></div>
+        <canvas id="linearChart" width="700" height="400"></canvas>
+        `;
+        await MathJax.typesetPromise();
+
+        document.getElementById('linearExample').addEventListener('click', ()=>{
+            let theta0=5, theta1=2;
+            let xs=[], ys=[], y_preds=[];
+            let tableHTML='<table><tr><th>x</th><th>y_actual</th><th>y_predicted</th></tr>';
+            for(let i=0;i<15;i++){
+                let x = Math.floor(Math.random()*20);
+                let y = theta0 + theta1*x + Math.floor(Math.random()*5);
+                let y_pred = theta0 + theta1*x;
+                xs.push(x); ys.push(y); y_preds.push(y_pred);
+                tableHTML += `<tr><td>${x}</td><td>${y}</td><td>${y_pred}</td></tr>`;
+            }
+            tableHTML += '</table>';
+            document.getElementById('linearTable').innerHTML = tableHTML;
+
+            const ctx = document.getElementById('linearChart').getContext('2d');
+            window.myChart = new Chart(ctx, {
+                type:'scatter',
+                data:{
+                    datasets:[
+                        { label:'Actual Points', data:xs.map((x,i)=>({x:x,y:ys[i]})), backgroundColor:'red' },
+                        { label:'Predicted Line', data:[{x:0,y:theta0},{x:20,y:theta0+20*theta1}], type:'line', borderColor:'lime', borderWidth:2, fill:false }
+                    ]
+                },
+                options:{ scales:{x:{title:{display:true,text:'X'}},y:{title:{display:true,text:'Y'}}} }
+            });
+        });
+    }
+
+    else if(val==='knn'){
+        output.innerHTML = `
+        <h3>K-Nearest Neighbors (KNN)</h3>
+        <p><strong>Distance Calculation:</strong></p>
+        $$d(x, x_i) = \\sqrt{\\sum_{j=1}^{n} (x_j - x_{i,j})^2}$$
+        <p>We compute the Euclidean distance between the query point and each point in the training set.</p>
+
+        <p><strong>Prediction:</strong></p>
+        <p>Find the $K$ nearest neighbors and assign the label that is most frequent among them:</p>
+        $$\\hat{y} = \\text{mode}(y_{i_1},...,y_{i_K})$$
+        <p>This is non-parametric: KNN does not learn weights but relies on data proximity.</p>
+
+        <button id="knnExample">Generate Example & Plot</button>
+        <div id="knnTable"></div>
+        <canvas id="knnChart" width="700" height="400"></canvas>
+        `;
+        await MathJax.typesetPromise();
+
+        document.getElementById('knnExample').addEventListener('click', ()=>{
+            let points=[];
+            for(let i=0;i<15;i++){
+                let x=Math.floor(Math.random()*20);
+                let y=Math.floor(Math.random()*20);
+                let label=(x+y>20)?'Blue':'Red';
+                points.push({x,y,label});
+            }
+            let tableHTML='<table><tr><th>x</th><th>y</th><th>Label</th></tr>';
+            points.forEach(p=>tableHTML+=`<tr><td>${p.x}</td><td>${p.y}</td><td>${p.label}</td></tr>`);
+            tableHTML+='</table>';
+            document.getElementById('knnTable').innerHTML=tableHTML;
+
+            const ctx = document.getElementById('knnChart').getContext('2d');
+            window.myChart = new Chart(ctx,{type:'scatter',data:{datasets:[
+                {label:'Red',data:points.filter(p=>p.label==='Red').map(p=>({x:p.x,y:p.y})),backgroundColor:'red'},
+                {label:'Blue',data:points.filter(p=>p.label==='Blue').map(p=>({x:p.x,y:p.y})),backgroundColor:'blue'}
+            ]},options:{scales:{x:{title:{display:true,text:'X'}},y:{title:{display:true,text:'Y'}}}}});
+        });
+    }
+
+    else if(val==='kmeans'){
+        output.innerHTML = `
+        <h3>K-Means Clustering</h3>
+        <p><strong>Objective function:</strong></p>
+        $$J = \\sum_{k=1}^{K} \\sum_{x_i \\in C_k} ||x_i - \\mu_k||^2$$
+        <p>K-Means partitions points into $K$ clusters by minimizing the sum of squared distances to cluster centroids $\\mu_k$.</p>
+
+        <p><strong>Centroid update:</strong></p>
+        $$\\mu_k = \\frac{1}{|C_k|} \\sum_{x_i \\in C_k} x_i$$
+        <p>Recalculate centroid after assigning points. Repeat until convergence.</p>
+
+        <p><strong>Interpretation:</strong> K-Means finds compact clusters by iteratively assigning points and updating centroids.</p>
+
+        <button id="kmeansExample">Generate Example & Plot</button>
+        <div id="kmeansTable"></div>
+        <canvas id="kmeansChart" width="700" height="400"></canvas>
+        `;
+        await MathJax.typesetPromise();
+
+        document.getElementById('kmeansExample').addEventListener('click', ()=>{
+            let points=[]; for(let i=0;i<15;i++) points.push({x:Math.floor(Math.random()*20),y:Math.floor(Math.random()*20)});
+            let centroids=[{x:5,y:5},{x:15,y:15}];
+            points.forEach(p=>p.cluster=(Math.hypot(p.x-centroids[0].x,p.y-centroids[0].y)<Math.hypot(p.x-centroids[1].x,p.y-centroids[1].y))?0:1);
+
+            let tableHTML='<table><tr><th>x</th><th>y</th><th>Cluster</th></tr>';
+            points.forEach(p=>tableHTML+=`<tr><td>${p.x}</td><td>${p.y}</td><td>${p.cluster}</td></tr>`);
+            tableHTML+='</table>'; document.getElementById('kmeansTable').innerHTML=tableHTML;
+
+            const ctx=document.getElementById('kmeansChart').getContext('2d');
+            window.myChart=new Chart(ctx,{type:'scatter',data:{datasets:[
+                {label:'Cluster 0',data:points.filter(p=>p.cluster===0).map(p=>({x:p.x,y:p.y})),backgroundColor:'red'},
+                {label:'Cluster 1',data:points.filter(p=>p.cluster===1).map(p=>({x:p.x,y:p.y})),backgroundColor:'blue'},
+                {label:'Centroids',data:centroids.map(c=>({x:c.x,y:c.y})),backgroundColor:'yellow',pointStyle:'triangle',pointRadius:10}
+            ]},options:{scales:{x:{title:{display:true,text:'X'}},y:{title:{display:true,text:'Y'}}}}});
+        });
+    }
+
+    else if(val==='nn'){
+        output.innerHTML = `
+        <h3>Neural Networks</h3>
+        <p><strong>Forward pass:</strong></p>
+        $$a^{[l]} = g(W^{[l]} a^{[l-1]} + b^{[l]})$$
+        <p>Each layer computes a weighted sum of inputs plus bias, then applies an activation function $g$. This transforms the input to hidden features.</p>
+
+        <p><strong>Cost function:</strong></p>
+        $$J(W,b) = \\frac{1}{m} \\sum_{i=1}^{m} L(y^{(i)}, \\hat{y}^{(i)})$$
+        <p>$L$ is a loss function (MSE for regression, cross-entropy for classification). Minimizing $J$ ensures predictions are close to true outputs.</p>
+
+        <p><strong>Backpropagation:</strong></p>
+        $$\\frac{\\partial J}{\\partial W^{[l]}} = \\delta^{[l]} (a^{[l-1]})^T, \\quad \\frac{\\partial J}{\\partial b^{[l]}} = \\delta^{[l]}$$
+        <p>Compute gradients layer by layer to update weights and biases using gradient descent.</p>
+
+        <button id="nnExample">Generate Example & Plot</button>
+        <div id="nnTable"></div>
+        <canvas id="nnChart" width="700" height="400"></canvas>
+        `;
+        await MathJax.typesetPromise();
+
+        document.getElementById('nnExample').addEventListener('click', ()=>{
+            let x1=1,x2=2,W1=[[0.5,-0.3],[0.8,0.2]],b1=[0.1,0.2],W2=[0.7,-0.5],b2=0.05;
+            function relu(z){return Math.max(0,z);}
+            let a1=relu(W1[0][0]*x1+W1[0][1]*x2+b1[0]);
+            let a2=relu(W1[1][0]*x1+W1[1][1]*x2+b1[1]);
+            let out=W2[0]*a1+W2[1]*a2+b2;
+
+            let tableHTML='<table><tr><th>x1</th><th>x2</th><th>a1</th><th>a2</th><th>Output</th></tr>';
+            tableHTML+=`<tr><td>${x1}</td><td>${x2}</td><td>${a1.toFixed(2)}</td><td>${a2.toFixed(2)}</td><td>${out.toFixed(2)}</td></tr></table>`;
+            document.getElementById('nnTable').innerHTML=tableHTML;
+
+            const ctx=document.getElementById('nnChart').getContext('2d');
+            window.myChart=new Chart(ctx,{type:'scatter',data:{datasets:[
+                {label:'Input',data:[{x:x1,y:x2}],backgroundColor:'red'},
+                {label:'Hidden Neurons',data:[{x:0.5,y:a1},{x:1,y:a2}],backgroundColor:'blue'}
+            ]},options:{scales:{x:{title:{display:true,text:'X'}},y:{title:{display:true,text:'Y'}}}}});
+        });
+    }
+
+    await MathJax.typesetPromise();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Interactive Data Visualization with Insights</title>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+body { font-family: 'Segoe UI', sans-serif; background:#222; color:#fff; text-align:center; padding:20px;}
+select, input[type=file], button { font-size:16px; padding:8px; margin:10px; border-radius:5px; cursor:pointer; }
+#plot { width:90%; height:500px; margin:auto; }
+#insights { margin-top:20px; color:#ffd700; text-align:left; max-width:900px; margin:auto; }
+
+#dropArea {
+    border: 2px dashed #fff;
+    padding: 40px;
+    margin: 20px auto;
+    width: 80%;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+}
+#dropArea.hover { border-color: #ffd700; color: #ffd700; }
+</style>
+</head>
+<body>
+<div style="position:fixed; top:20px; left:20px; display:flex; flex-direction:column; gap:10px; z-index:1000;">
+    <button onclick="window.location.href='index.html'" style="padding:10px 15px; border:none; border-radius:5px; cursor:pointer; background:#ffd700; color:#1e1e2f; font-weight:bold;">🏠 Home</button>
+
+    <button onclick="window.location.href='playground.html'" style="padding:10px 15px; border:none; border-radius:5px; cursor:pointer; background:#ffd700; color:#1e1e2f; font-weight:bold;">Playground</button>
+
+    <button onclick="window.location.href='projects.html'" style="padding:10px 15px; border:none; border-radius:5px; cursor:pointer; background:#ffd700; color:#1e1e2f; font-weight:bold;">Projects</button>
+
+    <button onclick="window.location.href='about.html'" style="padding:10px 15px; border:none; border-radius:5px; cursor:pointer; background:#ffd700; color:#1e1e2f; font-weight:bold;">About</button>
+</div>
+
+<h1>Interactive Data Visualization with Insights</h1>
+
+<div id="dropArea">Drag & Drop CSV/XLSX file here or click to browse</div>
+<input type="file" id="fileInput" accept=".csv,.xlsx" style="display:none;"/>
+<br>
+<label>Dimension:</label>
+<select id="dimSelect">
+    <option value="1">1D</option>
+    <option value="2">2D</option>
+    <option value="3">3D</option>
+</select>
+<br>
+<label>X-axis:</label>
+<select id="xSelect"></select>
+<label>Y-axis:</label>
+<select id="ySelect"></select>
+<label>Z-axis:</label>
+<select id="zSelect"></select>
+<br>
+<button id="plotBtn">Plot Data</button>
+
+<div id="plot"></div>
+<div id="insights"></div>
+
+<script>
+let headers = [];
+let numericData = [];
+
+// ----------------- Handle file loading -----------------
+const fileInput = document.getElementById('fileInput');
+const dropArea = document.getElementById('dropArea');
+
+dropArea.addEventListener('click', ()=>fileInput.click());
+
+dropArea.addEventListener('dragover', (e)=>{
+    e.preventDefault();
+    dropArea.classList.add('hover');
+});
+dropArea.addEventListener('dragleave', (e)=>{
+    dropArea.classList.remove('hover');
+});
+dropArea.addEventListener('drop', (e)=>{
+    e.preventDefault();
+    dropArea.classList.remove('hover');
+    const file = e.dataTransfer.files[0];
+    if(file) handleFile(file);
+});
+
+fileInput.addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    if(file) handleFile(file);
+});
+
+async function handleFile(file){
+    headers = [];
+    numericData = [];
+
+    if(file.name.endsWith('.csv')){
+        const text = await file.text();
+        const rows = text.split(/\r?\n/).map(r=>r.split(','));
+        headers = rows[0];
+        numericData = rows.slice(1)
+            .map(r => r.map(v=>{
+                const num = parseFloat(v?.trim());
+                return isNaN(num) ? null : num;
+            }))
+            .filter(r => r.some(v=>v!==null));
+    } else if(file.name.endsWith('.xlsx')){
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data);
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet,{header:1});
+        headers = json[0];
+        numericData = json.slice(1)
+            .map(r => r.map(v=>{
+                const num = parseFloat(v?.toString().trim());
+                return isNaN(num) ? null : num;
+            }))
+            .filter(r => r.some(v=>v!==null));
+    } else {
+        alert("Only CSV or XLSX files are supported!");
+        return;
+    }
+
+    ['xSelect','ySelect','zSelect'].forEach(id=>{
+        const sel = document.getElementById(id);
+        sel.innerHTML = '';
+        headers.forEach(h=>{
+            const opt = document.createElement('option');
+            opt.value = h;
+            opt.textContent = h;
+            sel.appendChild(opt);
+        });
+    });
+
+    alert('File loaded! Select axes and dimension to plot.');
+}
+
+// ----------------- Plot and generate insights -----------------
+document.getElementById('plotBtn').addEventListener('click', ()=>{
+    const dim = parseInt(document.getElementById('dimSelect').value);
+    const xCol = document.getElementById('xSelect').value;
+    const yCol = document.getElementById('ySelect').value;
+    const zCol = document.getElementById('zSelect').value;
+
+    const xIdx = headers.indexOf(xCol);
+    const yIdx = headers.indexOf(yCol);
+    const zIdx = headers.indexOf(zCol);
+
+    const xData = numericData.map(r=>r[xIdx]).filter(v=>v!==null);
+    const yData = numericData.map(r=>r[yIdx]).filter(v=>v!==null);
+    const zData = numericData.map(r=>r[zIdx]).filter(v=>v!==null);
+
+    let data=[], layout={title:"Data Visualization"};
+
+    if(dim===1){
+        data = [{x:xData, type:'histogram'}];
+    } else if(dim===2){
+        data = [{x:xData, y:yData, mode:'markers', type:'scatter', marker:{size:6}}];
+    } else if(dim===3){
+        data = [{x:xData, y:yData, z:zData, mode:'markers', type:'scatter3d', marker:{size:4}}];
+    }
+
+    Plotly.newPlot('plot', data, layout);
+
+    // ----------------- Insights -----------------
+    function mean(arr){return arr.reduce((a,b)=>a+b,0)/arr.length;}
+    function std(arr){const m=mean(arr); return Math.sqrt(arr.reduce((a,b)=>a+(b-m)**2,0)/arr.length);}
+    function corr(x,y){
+        const mx=mean(x), my=mean(y);
+        let num=0, denX=0, denY=0;
+        for(let i=0;i<x.length;i++){
+            num += (x[i]-mx)*(y[i]-my);
+            denX += (x[i]-mx)**2;
+            denY += (y[i]-my)**2;
+        }
+        return num/Math.sqrt(denX*denY+1e-6);
+    }
+
+    let insightText = "<strong>Basic Stats:</strong><br>";
+    insightText += `${xCol}: mean=${mean(xData).toFixed(2)}, std=${std(xData).toFixed(2)}<br>`;
+    if(dim>=2) insightText += `${yCol}: mean=${mean(yData).toFixed(2)}, std=${std(yData).toFixed(2)}<br>`;
+    if(dim===3) insightText += `${zCol}: mean=${mean(zData).toFixed(2)}, std=${std(zData).toFixed(2)}<br>`;
+
+    if(dim>=2){
+        insightText += "<br><strong>Relationships:</strong><br>";
+        const cXY = corr(xData, yData);
+        insightText += `Correlation between ${xCol} and ${yCol}: ${cXY.toFixed(2)}<br>`;
+        if(dim===3){
+            const cXZ = corr(xData, zData);
+            const cYZ = corr(yData, zData);
+            insightText += `Correlation between ${xCol} and ${zCol}: ${cXZ.toFixed(2)}<br>`;
+            insightText += `Correlation between ${yCol} and ${zCol}: ${cYZ.toFixed(2)}<br>`;
+        }
+    }
+
+    document.getElementById('insights').innerHTML = insightText;
+});
+</script>
+</body>
+</html>
