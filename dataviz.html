@@ -24,15 +24,41 @@ select, input[type=file], button { font-size:16px; padding:8px; margin:10px; bor
 </style>
 </head>
 <body>
+<!-- Vertical menu stays the same -->
 <div style="position:fixed; top:20px; left:20px; display:flex; flex-direction:column; gap:10px; z-index:1000;">
     <button onclick="window.location.href='index.html'" style="padding:10px 15px; border:none; border-radius:5px; cursor:pointer; background:#ffd700; color:#1e1e2f; font-weight:bold;">🏠 Home</button>
-
     <button onclick="window.location.href='playground.html'" style="padding:10px 15px; border:none; border-radius:5px; cursor:pointer; background:#ffd700; color:#1e1e2f; font-weight:bold;">Playground</button>
-
     <button onclick="window.location.href='projects.html'" style="padding:10px 15px; border:none; border-radius:5px; cursor:pointer; background:#ffd700; color:#1e1e2f; font-weight:bold;">Projects</button>
-
     <button onclick="window.location.href='about.html'" style="padding:10px 15px; border:none; border-radius:5px; cursor:pointer; background:#ffd700; color:#1e1e2f; font-weight:bold;">About</button>
 </div>
+
+<!-- Add this wrapper -->
+<div style="margin-left:150px; padding:20px;">
+    <h1>Interactive Data Visualization with Insights</h1>
+
+    <div id="dropArea">Drag & Drop CSV/XLSX file here or click to browse</div>
+    <input type="file" id="fileInput" accept=".csv,.xlsx" style="display:none;"/>
+    <br>
+    <label>Dimension:</label>
+    <select id="dimSelect">
+        <option value="1">1D</option>
+        <option value="2">2D</option>
+        <option value="3">3D</option>
+    </select>
+    <br>
+    <label>X-axis:</label>
+    <select id="xSelect"></select>
+    <label>Y-axis:</label>
+    <select id="ySelect"></select>
+    <label>Z-axis:</label>
+    <select id="zSelect"></select>
+    <br>
+    <button id="plotBtn">Plot Data</button>
+
+    <div id="plot"></div>
+    <div id="insights"></div>
+</div>
+
 
 <h1>Interactive Data Visualization with Insights</h1>
 
