@@ -177,17 +177,23 @@ document.querySelectorAll('.progress-bar').forEach(bar => {
     const value = parseInt(bar.dataset.progress);
     bar.style.width = value + "%";
 
-    if (value < 40) {
-        bar.style.backgroundColor = "#e74c3c";   // red
-    } else if (value < 60) {
-        bar.style.backgroundColor = "#ff9800";   // orange
-    } else if (value < 80) {
-        bar.style.backgroundColor = "#007BFF";   // blue
+    // Red → Yellow → Green gradient
+    let r, g;
+
+    if (value <= 50) {
+        // Red to Yellow
+        r = 255;
+        g = Math.round((value / 50) * 255);
     } else {
-        bar.style.backgroundColor = "#28a745";   // green
+        // Yellow to Green
+        r = Math.round(255 - ((value - 50) / 50) * 255);
+        g = 255;
     }
+
+    bar.style.backgroundColor = `rgb(${r}, ${g}, 0)`;
 });
 </script>
+
 
 </body>
 </html>
