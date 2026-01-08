@@ -60,29 +60,7 @@ select, input[type=file], button { font-size:16px; padding:8px; margin:10px; bor
 </div>
 
 
-<h1>Interactive Data Visualization with Insights</h1>
 
-<div id="dropArea">Drag & Drop CSV/XLSX file here or click to browse</div>
-<input type="file" id="fileInput" accept=".csv,.xlsx" style="display:none;"/>
-<br>
-<label>Dimension:</label>
-<select id="dimSelect">
-    <option value="1">1D</option>
-    <option value="2">2D</option>
-    <option value="3">3D</option>
-</select>
-<br>
-<label>X-axis:</label>
-<select id="xSelect"></select>
-<label>Y-axis:</label>
-<select id="ySelect"></select>
-<label>Z-axis:</label>
-<select id="zSelect"></select>
-<br>
-<button id="plotBtn">Plot Data</button>
-
-<div id="plot"></div>
-<div id="insights"></div>
 
 <script>
 let headers = [];
