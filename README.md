@@ -1,6 +1,6 @@
 # Chadli Rayane — Portfolio / CV Website
 
-This repository contains my personal portfolio and CV website built with pure HTML/CSS/JS and deployed with GitHub Pages.
+This repository contains my personal portfolio and CV website built with pure HTML/CSS/JS and deployed using GitHub Pages.
 
 It showcases my background in:
 - Machine Learning
@@ -12,9 +12,7 @@ It showcases my background in:
 
 ## 🌐 Live Website
 
-After enabling GitHub Pages:
-
-**https://chadli016.github.io/<repo-name>/**
+https://chadli0016.github.io/CV_test/
 
 ---
 
@@ -24,7 +22,7 @@ After enabling GitHub Pages:
 |-----|-------------|
 | `index.html` | Main landing page with profile and navigation |
 | `about.html` | Full CV (education, skills, background) |
-| `projects.html` | All academic & technical projects with progress |
+| `projects.html` | Academic & technical projects with progress |
 | `playground.html` | Entry to interactive demos |
 | `ml.html` | ML mathematics playground with live plots |
 | `dataviz.html` | Interactive CSV/XLSX data visualization tool |
@@ -44,9 +42,9 @@ After enabling GitHub Pages:
 
 ## ▶️ Run Locally
 
-Just open `index.html`
+Open `index.html` directly
 
-Or run:
+or
 
 ```bash
 python -m http.server 8000
